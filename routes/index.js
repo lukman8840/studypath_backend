@@ -13,7 +13,7 @@ const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 // The Gemini 1.5 models are versatile and work with both text-only and multimodal prompts
 router.get('/', function (req, res, next) {
-  res.render('index', { title: 'Express' });
+
 });
 
 router.post('/learn', async function (req, res, next) {
