@@ -4,12 +4,19 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const NodemailerTransporter = require("../middlewares/NodeMailer");
 
-const WellLink = "https://studypath-ui.vercel.app/";
+const WellLinkLogin = "https://well-link.netlify.app/login";
 const handleErrors = (err) => {
   let errors = { message: "", status: 400 };
 
   if (err.code === 11000) {
     errors.message = "This email is already registered";
+    return errors;
+  }
+
+  // Handle OAuth token errors
+  if (err.message?.includes("invalid_grant") || err.message?.includes("Token has been expired")) {
+    errors.message = "Email service authentication failed. Please contact support.";
+    errors.status = 503; // Service Unavailable
     return errors;
   }
 
@@ -29,7 +36,6 @@ const generateToken = (id) => {
 // Signup controller
 exports.Signup_post = async (req, res) => {
   const { body } = req;
-
   const JoiSchema = Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().required().min(6).max(16),
@@ -39,6 +45,7 @@ exports.Signup_post = async (req, res) => {
 
   const { value, error } = JoiSchema.validate(body);
 
+  // console.log(error);
   if (error) {
     const errors = handleErrors(error);
     return res.status(422).json({ errors, data: value, success: false });
@@ -62,10 +69,10 @@ exports.Signup_post = async (req, res) => {
       <h2 style="text-align: center; color: #3e98c7;">Welcome to WellLink!</h2>
       <p>Congratulations! Your account has been successfully activated. You’re all set to log in and start enjoying all the great features WellLink has to offer.</p>
       <p style="text-align: center;">
-        <a href="${WellLink}" style="background-color: #3e98c7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Log in to WellLink</a>
+        <a href="${WellLinkLogin}" style="background-color: #3e98c7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Log in to WellLink</a>
       </p>
       <p>If the button above doesn't work, copy and paste the following link into your browser:</p>
-      <p><a href="${WellLink}">${WellLink}</a></p>
+      <p><a href="${WellLinkLogin}">${WellLinkLogin}</a></p>
       <p>Thank you for joining us!<br>– The WellLink Team</p>
     </div>
   `,
@@ -74,12 +81,16 @@ exports.Signup_post = async (req, res) => {
     async function isEmailValid() {
       try {
         const mailInfo = await NodemailerTransporter.sendMail(EmailOptions);
+        console.log("mailInfo", mailInfo);
         return mailInfo;
       } catch (emailError) {
-        const errors = handleErrors({
-          message: "Invalid email address or email sending failed",
+        console.log("emailError", emailError);
+        const errors = handleErrors(emailError); // Pass the actual error object
+        return res.status(errors.status).json({
+          errors,
+          data: null,
+          success: false,
         });
-        return res.status(422).json({ errors, data: null, success: false });
       }
     }
 
