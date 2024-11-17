@@ -17,39 +17,74 @@ router.get("/", function (req, res, next) {});
 router.post("/learn", async function (req, res, next) {
   const { topic, level } = req.body;
 
+  if (!topic || !level) {
+    return res.status(400).json({
+      success: false,
+      error: "Topic and level are required",
+    });
+  }
+
   try {
     const prompt = `
-           your are helpful assistant that help teach ${level} level the below topic,
-            Your task is to generate break down of this topic "${topic}" into  learning tasks, 
-            the learning task must not be less than five,  
-            your response must be only json format, don't include anything before or after the json, 
-            here is the format:
-            {
-              id:'first id',
-              title: 'The First learning task',
-              link: 'link to the source of the above',
-            },
-            {
-              id:'second id',
-              title: 'The Second learning task',
-              link: 'link to the source of the above',
-            },
-            {
-              id:'thrid id',
-               title:'The third learning task',
-              link: 'link to the source of the above',
-            },
-
+      You are a helpful assistant that helps teach ${level} level students.
+      Generate a structured learning path for the topic "${topic}".
+      Provide at least 5 sequential learning tasks.
+      
+      Respond ONLY with a JSON array of objects with this structure:
+      [
+        {
+          "id": "1",
+          "title": "Clear, actionable learning task title",
+          "link": "URL to reliable learning resource"
+        }
+      ]
+      
+      Ensure each task builds upon previous knowledge and links to reputable educational resources.
     `;
-    const result = await model.generateContent(prompt);
-    const responseGemini = await result.response;
-    const text = responseGemini.text();
 
-    res.status(200).json({ text });
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text();
+    // Extract JSON from the response text
+    const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      throw new Error("Invalid response format");
+    }
+
+    let parsedTasks;
+    try {
+      parsedTasks = JSON.parse(jsonMatch[0]);
+
+      // Validate the structure of each task
+      const isValidStructure = parsedTasks.every(
+        (task) =>
+          typeof task.id === "string" &&
+          typeof task.title === "string" &&
+          typeof task.link === "string" &&
+          task.link.startsWith("http")
+      );
+
+      if (!isValidStructure) {
+        throw new Error("Invalid task structure");
+      }
+    } catch (parseError) {
+      throw new Error("Failed to parse learning tasks");
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        topic,
+        level,
+        tasks: parsedTasks,
+      },
+    });
   } catch (error) {
-    // console.log(error.response.data.error.message);
-    console.log("Error:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Error generating learning path:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to generate learning path",
+      details: error.message,
+    });
   }
 });
 
