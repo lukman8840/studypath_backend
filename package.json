@@ -9,13 +9,21 @@
   "dependencies": {
     "@google/generative-ai": "^0.12.0",
     "axios": "^1.7.2",
+    "bcrypt": "^5.1.1",
+    "cookie-session": "^2.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "~4.16.1",
     "http-errors": "~1.6.3",
     "jade": "~1.11.0",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.8.1",
     "morgan": "~1.9.1",
-    "nodemon": "^2.0.15"
+    "nodemailer": "^6.9.16",
+    "nodemon": "^2.0.15",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0"
   },
   "devDependencies": {
     "@flydotio/dockerfile": "^0.2.14"
