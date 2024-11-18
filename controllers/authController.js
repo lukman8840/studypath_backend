@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const NodemailerTransporter = require("../middlewares/NodeMailer");
 
-const WellLinkLogin = "https://well-link.netlify.app/login";
+const WellLinkLogin = "https://well-link.netlify.app";
 const handleErrors = (err) => {
   let errors = { message: "", status: 400 };
 

@@ -6,6 +6,8 @@ const User = require("../models/userModel");
 const mongoose = require("mongoose");
 const NodemailerTransporter = require("../middlewares/NodeMailer");
 
+const WellLink_URL = "https://well-link.netlify.app";
+
 module.exports.LogginSymptoms = async (req, res) => {
   const { age, gender, known_allergies, smoker, chronic_conditions, userId, symptoms } = req.body;
   // console.log(req.body);
@@ -449,7 +451,7 @@ module.exports.UpdateDoctorApproval = async function (req, res) {
         </p>
         
         <div style="text-align: center; margin-top: 30px;">
-          <a href="#" style="background-color: #3e98c7; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block;">
+          <a href=${WellLink_URL} style="background-color: #3e98c7; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block;">
             View Details
           </a>
         </div>
