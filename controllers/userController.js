@@ -47,8 +47,9 @@ module.exports.LogginSymptoms = async (req, res) => {
 
     **Important Rules:**
     - Ensure that any medication is only included in the "prescribe_medication" field.
+    - Assess the provided symptoms and health data to determine if medication is necessary. Include medication recommendations in the "prescribe_medication" field only when required. If medication is not necessary, set "prescribe_medication" to an empty string. If the symptoms strongly indicate that medication is essential, ensure appropriate medication is specified in the response.
     - Recommendations should only include non-medication advice such as lifestyle tips or monitoring suggestions.
-    - If no specific medication is recommended, the "prescribe_medication" empty string should be return.
+    - Ensure the output JSON format is well-structured and compliant with all rules.
 
     Your response must strictly follow these rules and must be in JSON format only. Do not include anything before or after the JSON.
 `;
