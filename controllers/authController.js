@@ -81,10 +81,8 @@ exports.Signup_post = async (req, res) => {
     async function isEmailValid() {
       try {
         const mailInfo = await NodemailerTransporter.sendMail(EmailOptions);
-        console.log("mailInfo", mailInfo);
         return mailInfo;
       } catch (emailError) {
-        console.log("emailError", emailError);
         const errors = handleErrors(emailError); // Pass the actual error object
         return res.status(errors.status).json({
           errors,

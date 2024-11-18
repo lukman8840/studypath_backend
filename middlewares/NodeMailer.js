@@ -12,6 +12,7 @@ const NodemailerTransporter = nodemailer.createTransport({
     accessToken: process.env.ACCESS_TOKEN,
     accessUrl: "https://accounts.google.com/o/oauth2/token",
   },
+  
 });
 
 module.exports = NodemailerTransporter;

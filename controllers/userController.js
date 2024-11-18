@@ -4,6 +4,7 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 const Record = require("../models/userRecord");
 const User = require("../models/userModel");
 const mongoose = require("mongoose");
+const NodemailerTransporter = require("../middlewares/NodeMailer");
 
 module.exports.LogginSymptoms = async (req, res) => {
   const { age, gender, known_allergies, smoker, chronic_conditions, userId, symptoms } = req.body;
@@ -395,19 +396,81 @@ module.exports.UpdateDoctorApproval = async function (req, res) {
         updatedAt: new Date(),
       },
     };
-    if (overall_status) {
-      updateData.$set["response.overall_status"] = overall_status;
-    }
+
+    // Add optional fields
     if (prescribe_medication) {
       updateData.$set["response.prescribe_medication"] = prescribe_medication;
     }
 
-    // Add doctor comments if provided
-    // if (doctor_comments) {
-    //   updateData.$set["response.doctor_comments"] = doctor_comments;
-    // }
+    if (overall_status) {
+      updateData.$set["response.overall_status"] = overall_status;
+    }
 
-    // Find and update the record
+    // Find the record first to get patient email if needed
+    const existingRecord = await Record.findById(cleanRecordId);
+    const findUser = await User.findById(existingRecord.userId);
+
+    if (!existingRecord) {
+      return res.status(404).json({
+        error: "Not Found",
+        message: `Record not found with ID: ${cleanRecordId}`,
+      });
+    }
+
+    // Send email only if doctors_approval is true
+    if (doctors_approval) {
+      const EmailOptions = {
+        from: process.env.EMAIL_ADDRESS,
+        to: findUser.email,
+        subject: "Doctor Approval Notification",
+        html: `
+           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f7f9; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+      <div style="background-color: #3e98c7; color: white; padding: 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px;">
+        <h1 style="margin: 0; font-size: 24px;">Medical Record Approval</h1>
+      </div>
+      
+      <div style="background-color: white; padding: 30px; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
+        <p style="color: #333; line-height: 1.6; font-size: 16px;">
+          Dear ${findUser.fullname || "Patient"},
+        </p>
+        
+        <p style="color: #2c3e50; line-height: 1.6; font-size: 16px;">
+          We are pleased to inform you that your medical record has been reviewed and approved by our medical professional.
+        </p>
+        
+        <div style="background-color: #e8f4f8; border-left: 4px solid #3e98c7; padding: 15px; margin: 20px 0;">
+          <p style="margin: 0; color: #2c3e50; font-weight: bold;">
+            Status: <span style="color: #27ae60;">Approved</span>
+          </p>
+        </div>
+        
+        <p style="color: #7f8c8d; line-height: 1.6; font-size: 14px; margin-top: 20px;">
+          If you have any questions or need further information, please contact our medical support team.
+        </p>
+        
+        <div style="text-align: center; margin-top: 30px;">
+          <a href="#" style="background-color: #3e98c7; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block;">
+            View Details
+          </a>
+        </div>
+      </div>
+      
+      <div style="text-align: center; margin-top: 20px; color: #7f8c8d; font-size: 12px;">
+        <p>© 2024 WellLink Health Services. All rights reserved.</p>
+      </div>
+    </div>
+        `,
+      };
+
+      try {
+        await NodemailerTransporter.sendMail(EmailOptions);
+      } catch (emailError) {
+        console.error("Email sending failed:", emailError);
+        // Optionally, you might want to handle email sending failure differently
+      }
+    }
+
+    // Update the record
     const updatedRecord = await Record.findOneAndUpdate(
       { _id: new mongoose.Types.ObjectId(cleanRecordId) },
       updateData,
@@ -417,15 +480,6 @@ module.exports.UpdateDoctorApproval = async function (req, res) {
       }
     );
 
-    // Check if record exists
-    if (!updatedRecord) {
-      return res.status(404).json({
-        error: "Not Found",
-        message: `Record not found with ID: ${cleanRecordId}`,
-      });
-    }
-
-    // Return success response
     res.status(200).json({
       message: "Doctor's approval status updated successfully",
       data: updatedRecord,
