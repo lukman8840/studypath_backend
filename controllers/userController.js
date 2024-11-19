@@ -181,17 +181,14 @@ module.exports.GetPatients = async function (req, res) {
       query.$or = [{ fullname: { $regex: search, $options: "i" } }, { email: { $regex: search, $options: "i" } }];
     }
 
-    const patients = await User.find(query)
-      .select("-password") // Exclude password field
-      .sort({ createdAt: -1 }); // Sort by newest first
+    const patients = await User.find(query).select("-password").sort({ createdAt: -1 });
+
     if (status) {
-      // Get all records for these patients
       const records = await Record.find({
         userId: { $in: patients.map((p) => p._id) },
         "response.overall_status": status,
       });
 
-      // Create a map of latest records by user
       const latestRecords = records.reduce((acc, record) => {
         const existingRecord = acc[record.userId];
         if (!existingRecord || record.createdAt > existingRecord.createdAt) {
@@ -200,7 +197,6 @@ module.exports.GetPatients = async function (req, res) {
         return acc;
       }, {});
 
-      // Filter patients based on their latest record status
       const filteredPatients = patients.filter(
         (patient) => latestRecords[patient._id]?.response.overall_status === status
       );
@@ -213,11 +209,11 @@ module.exports.GetPatients = async function (req, res) {
       });
     }
 
-    // Get latest record for each patient
     const latestRecords = await Record.aggregate([
       {
         $match: {
           userId: { $in: patients.map((p) => p._id.toString()) },
+          "response.isScheduled": "true",
         },
       },
       {
@@ -231,17 +227,18 @@ module.exports.GetPatients = async function (req, res) {
       },
     ]);
 
-    // Create a map of latest records
     const recordsMap = latestRecords.reduce((acc, { _id, latestRecord }) => {
       acc[_id] = latestRecord;
       return acc;
     }, {});
 
-    // Combine patient data with their latest record
-    const patientsWithRecords = patients.map((patient) => ({
-      ...patient.toObject(),
-      latestRecord: recordsMap[patient._id.toString()] || null,
-    }));
+    // Filter out patients without a latest record
+    const patientsWithRecords = patients
+      .filter((patient) => recordsMap[patient._id.toString()] !== undefined)
+      .map((patient) => ({
+        ...patient.toObject(),
+        latestRecord: recordsMap[patient._id.toString()],
+      }));
 
     res.status(200).json({
       data: patientsWithRecords,
@@ -257,7 +254,7 @@ module.exports.GetPatients = async function (req, res) {
 
 module.exports.UpdateOverallStatus = async function (req, res) {
   const { recordId } = req.params;
-  const { overall_status } = req.body;
+  const { overall_status, isScheduled } = req.body;
   try {
     // Validate input
     if (!overall_status) {
@@ -268,20 +265,28 @@ module.exports.UpdateOverallStatus = async function (req, res) {
     }
 
     const cleanRecordId = recordId.trim().replace(":", "");
+
+    // Prepare update object
+    const updateFields = {
+      "response.overall_status": overall_status,
+      updatedAt: new Date(),
+    };
+
+    // Add isScheduled if provided
+    if (isScheduled !== undefined) {
+      updateFields["response.isScheduled"] = isScheduled.toString();
+    }
+
     // Find and update the record
     const updatedRecord = await Record.findOneAndUpdate(
       { _id: new mongoose.Types.ObjectId(cleanRecordId) },
-      {
-        $set: {
-          "response.overall_status": overall_status,
-          updatedAt: new Date(),
-        },
-      },
+      { $set: updateFields },
       {
         new: true, // Return the updated document
         runValidators: true, // Run schema validators
       }
     );
+
     // Check if record exists
     if (!updatedRecord) {
       return res.status(404).json({
@@ -490,6 +495,38 @@ module.exports.UpdateDoctorApproval = async function (req, res) {
     console.error("Error updating doctor's approval:", error);
     console.error("Record ID that caused error:", recordId);
 
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: error.message,
+    });
+  }
+};
+
+module.exports.GetUsers = async function (req, res) {
+  const { status, name } = req.query;
+
+  try {
+    // Base query for finding users
+    let query = {};
+
+    // Filter by name (case-insensitive, matches full name or partial name)
+    if (name) {
+      query.$or = [{ fullname: { $regex: name, $options: "i" } }, { email: { $regex: name, $options: "i" } }];
+    }
+
+    // Filter by role/status if provided
+    if (status) {
+      query.role = status;
+    }
+
+    // Find users based on query, exclude password
+    const records = await User.find(query).select("-password");
+
+    res.status(200).json({
+      data: records,
+      total: records.length,
+    });
+  } catch (error) {
     res.status(500).json({
       error: "Internal Server Error",
       message: error.message,

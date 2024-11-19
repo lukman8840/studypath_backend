@@ -65,17 +65,38 @@ exports.Signup_post = async (req, res) => {
       to: value.email,
       subject: "Welcome to WellLink – Confirm Your Email",
       html: `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; padding: 20px; border: 1px solid #ddd; border-radius: 10px; max-width: 600px; margin: auto;">
-      <h2 style="text-align: center; color: #3e98c7;">Welcome to WellLink!</h2>
-      <p>Congratulations! Your account has been successfully activated. You’re all set to log in and start enjoying all the great features WellLink has to offer.</p>
-      <p style="text-align: center;">
-        <a href="${WellLinkLogin}" style="background-color: #3e98c7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Log in to WellLink</a>
-      </p>
-      <p>If the button above doesn't work, copy and paste the following link into your browser:</p>
-      <p><a href="${WellLinkLogin}">${WellLinkLogin}</a></p>
-      <p>Thank you for joining us!<br>– The WellLink Team</p>
-    </div>
-  `,
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f7f9; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div style="background-color: #3e98c7; color: white; padding: 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px;">
+          <h1 style="margin: 0; font-size: 24px;">Welcome to WellLink!</h1>
+        </div>
+      
+        <div style="background-color: white; padding: 30px; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
+          <p style="color: #333; line-height: 1.6; font-size: 16px;">
+            Congratulations! Your account has been successfully activated. You’re all set to log in and start enjoying all the great features WellLink has to offer.
+          </p>
+      
+          <div style="text-align: center; margin: 20px 0;">
+            <a href="${WellLinkLogin}" style="background-color: #3e98c7; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+              Log in to WellLink
+            </a>
+          </div>
+      
+          <p style="color: #7f8c8d; line-height: 1.6; font-size: 14px; margin-top: 20px;">
+            If the button above doesn't work, copy and paste the following link into your browser:
+          </p>
+          <p>
+            <a href="${WellLinkLogin}" style="color: #3e98c7;">${WellLinkLogin}</a>
+          </p>
+          
+          <p style="color: #333; line-height: 1.6; font-size: 16px;">
+            Thank you for joining us!<br>– The WellLink Team
+          </p>
+        </div>
+      
+        <div style="text-align: center; margin-top: 20px; color: #7f8c8d; font-size: 12px;">
+          <p>© 2024 WellLink Health Services. All rights reserved.</p>
+        </div>
+      </div>`,
     };
 
     async function isEmailValid() {

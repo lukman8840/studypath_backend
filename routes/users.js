@@ -2,11 +2,10 @@ var express = require("express");
 var router = express.Router();
 const userController = require("../controllers/userController");
 const { DoctorMiddleware } = require("../middlewares/doctorsMiddleware");
+const { AdminMiddleware } = require("../middlewares/adminMiddleware");
 
 /* GET users listing. */
-router.get("/", function (req, res, next) {
-  res.send("respond with a resource");
-});
+router.get("/", AdminMiddleware, userController.GetUsers);
 
 router.get("/patients", DoctorMiddleware, userController.GetPatients);
 router.get("/records", userController.GetRecords);

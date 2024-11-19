@@ -14,6 +14,11 @@ const recordSchema = new mongoose.Schema({
       type: String,
       required: true,
     },
+    isScheduled: {
+      type: String,
+      required: false,
+      default: false,
+    },
     doctor_approved: {
       type: String,
       required: false,
