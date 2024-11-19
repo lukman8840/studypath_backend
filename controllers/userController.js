@@ -73,8 +73,9 @@ module.exports.LogginSymptoms = async (req, res) => {
       res.status(500).json({ message: "Failed to stored record" });
     }
   } catch (error) {
+    console.log("API_ERROR", error);
     if (error.status === 503) {
-      res.status(503).json({ message: "Our servers are experiencing high traffic. Try again soon." });
+      res.status(503).json({ message: "Our Ai servers are experiencing high traffic. Try again soon." });
       return;
     }
 
