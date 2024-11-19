@@ -43,14 +43,15 @@ module.exports.LogginSymptoms = async (req, res) => {
     {
         "symptoms": "described symptoms based on input",
         "overall_status": "[Stable / Caution / High Risk]",
-        "prescribe_medication":"medication 1, medication 2",
+        "prescribe_medication": "medication 1, medication 2 or simple remedies like 'hydration, rest'",
         "recommendations": "recommendations here without any mention of medications",
         "next_steps": "next step here"
     }
 
     **Important Rules:**
-    - Ensure that any medication is only included in the "prescribe_medication" field.
-    - Assess the provided symptoms and health data to determine if medication is necessary. Include medication recommendations in the "prescribe_medication" field only when required. If medication is not necessary, set "prescribe_medication" to an empty string. If the symptoms strongly indicate that medication is essential, ensure appropriate medication is specified in the response.
+    - Ensure that any medication or remedies are only included in the "prescribe_medication" field.
+    - If a remedy (e.g., hydration, rest) is suitable, include it in "prescribe_medication."
+    - Ensure that medication is provided if symptoms indicate it is necessary. If not needed, set "prescribe_medication" to "None".
     - Recommendations should only include non-medication advice such as lifestyle tips or monitoring suggestions.
     - Ensure the output JSON format is well-structured and compliant with all rules.
 
