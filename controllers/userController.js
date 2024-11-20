@@ -114,16 +114,38 @@ module.exports.GetRecordsStats = async function (req, res) {
     // Get total count of records
     const totalRecords = await Record.countDocuments({ userId });
     // Get count by status
+    const defaultStatuses = [
+      { status: "Caution", count: 0 },
+      { status: "Stable", count: 0 },
+      { status: "High Risk", count: 0 },
+    ];
+
     const statusCounts = await Record.aggregate([
-      { $match: { userId: userId } },
+      {
+        $match: {
+          userId: userId,
+        },
+      },
       {
         $group: {
           _id: "$response.overall_status",
           count: { $sum: 1 },
         },
       },
+      {
+        $project: {
+          _id: 0,
+          status: "$_id",
+          count: "$count",
+        },
+      },
     ]);
 
+    // Merge actual counts with default statuses
+    const result = defaultStatuses.map((defaultStatus) => {
+      const foundStatus = statusCounts.find((item) => item.status === defaultStatus.status);
+      return foundStatus || defaultStatus;
+    });
     // Get records by date (last 7 days)
     // const last7DaysRecords = await Record.aggregate([
     //   {
@@ -164,7 +186,7 @@ module.exports.GetRecordsStats = async function (req, res) {
     res.status(200).json({
       data: {
         totalRecords,
-        statusCounts,
+        statusCounts: result,
         // last7DaysRecords,
         commonSymptoms,
       },
