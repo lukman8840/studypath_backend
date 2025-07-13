@@ -9,6 +9,8 @@ const cors = require("cors");
 
 const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/users");
+
+// 🔷 Auth routes disabled because related files were deleted
 const authRouter = require("./routes/auth");
 
 const app = express();
@@ -28,6 +30,8 @@ app.use(express.static(path.join(__dirname, "public")));
 // Route middleware
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
+
+// 🔷 Auth routes disabled because related files were deleted
 app.use("/auth", authRouter);
 
 // ✅ MongoDB connection with proper error handling
